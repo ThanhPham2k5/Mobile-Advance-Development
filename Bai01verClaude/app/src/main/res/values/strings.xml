@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Gold Tracker</string>
+    <string name="nav_dashboard">Bảng Giá</string>
+    <string name="nav_converter">Quy Đổi</string>
+    <string name="nav_chart">Biểu Đồ</string>
+    <string name="nav_history">Lịch Sử</string>
+    <string name="nav_portfolio">Danh Mục</string>
+</resources>

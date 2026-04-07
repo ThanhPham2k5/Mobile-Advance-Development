@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Gold -->
+    <color name="gold_primary">#D4A843</color>
+    <color name="gold_dark">#B8860B</color>
+    <color name="gold_light">#F5D485</color>
+
+    <!-- Dark Background -->
+    <color name="bg_primary">#0A0A0F</color>
+    <color name="bg_secondary">#13131A</color>
+    <color name="bg_card">#1C1C26</color>
+
+    <!-- Text -->
+    <color name="text_primary">#F5F5F0</color>
+    <color name="text_secondary">#9898A8</color>
+    <color name="text_hint">#55555F</color>
+
+    <!-- Trạng thái giá -->
+    <color name="price_up">#26D07C</color>
+    <color name="price_down">#FF4B6E</color>
+
+    <!-- Khác -->
+    <color name="divider">#2A2A38</color>
+    <color name="nav_background">#13131A</color>
+</resources>

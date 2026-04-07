@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/dashboardFragment">
+
+    <fragment android:id="@+id/dashboardFragment"
+        android:name="com.goldtracker.ui.dashboard.DashboardFragment"
+        android:label="Bảng Giá"/>
+    <fragment android:id="@+id/converterFragment"
+        android:name="com.goldtracker.ui.converter.ConverterFragment"
+        android:label="Quy Đổi"/>
+    <fragment android:id="@+id/chartFragment"
+        android:name="com.goldtracker.ui.chart.ChartFragment"
+        android:label="Biểu Đồ"/>
+    <fragment android:id="@+id/historyFragment"
+        android:name="com.goldtracker.ui.history.HistoryFragment"
+        android:label="Lịch Sử"/>
+    <fragment android:id="@+id/portfolioFragment"
+        android:name="com.goldtracker.ui.portfolio.PortfolioFragment"
+        android:label="Danh Mục"/>
+</navigation>
