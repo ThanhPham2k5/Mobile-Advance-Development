@@ -17,6 +17,6 @@
         android:name="com.goldtracker.ui.history.HistoryFragment"
         android:label="Lịch Sử"/>
     <fragment android:id="@+id/portfolioFragment"
-        android:name="com.goldtracker.ui.portfolio.PortfolioFragment"
-        android:label="Danh Mục"/>
+        android:name="com.goldtracker.ui.portfolio.ProfitFragment"
+        android:label="Dự đoán"/>
 </navigation>
