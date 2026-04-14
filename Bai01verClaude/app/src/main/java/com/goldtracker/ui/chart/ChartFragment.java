@@ -1,142 +1,111 @@
 package com.goldtracker.ui.chart;
 
-import android.graphics.Color;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.*;
-import android.widget.TextView;
 
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.data.*;
-
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import com.goldtracker.R;
-import com.goldtracker.model.GoldResponse;
-import com.goldtracker.remote.ApiClient;
-import com.goldtracker.remote.GoldApiService;
+import com.goldtracker.repository.GoldRepository;
 
-import java.util.*;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ChartFragment extends Fragment {
 
     private LineChart lineChart;
-    private TextView tvStatus;
-
-    private static final String API_KEY = "794300e424249b0798dd4d63e3785612";
+    private GoldRepository repo;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             ViewGroup container,
                              Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_chart, container, false);
 
         lineChart = view.findViewById(R.id.lineChart);
-        tvStatus = view.findViewById(R.id.tvStatus);
+        repo = new GoldRepository(requireContext());
 
-        loadChartFromAPI();
+        loadChartData();
 
         return view;
     }
 
-    private void loadChartFromAPI() {
-        GoldApiService api = ApiClient.getService();
+    // =========================
+    // Load data 7 ngày
+    // =========================
+    private void loadChartData() {
 
-        // 👉 Ưu tiên XAU (giá vàng thật)
-        api.getRates(API_KEY, "XAU", "VND").enqueue(new Callback<GoldResponse>() {
+        repo.getLast7DaysOuncePrices(new GoldRepository.ChartCallback() {
+
             @Override
-            public void onResponse(Call<GoldResponse> call, Response<GoldResponse> response) {
+            public void onSuccess(List<AbstractMap.SimpleEntry<String, Double>> data) {
 
-                Double goldPrice = null;
-
-                if (response.body() != null && response.body().getRates() != null) {
-                    goldPrice = response.body().getRates().get("VND");
-                }
-
-                if (goldPrice != null) {
-                    tvStatus.setText("Biểu đồ");
-                    generateChart(goldPrice);
-                } else {
-                    tvStatus.setText("XAU lỗi → dùng USD fallback");
-                    loadFromUSD();
-                }
+                requireActivity().runOnUiThread(() -> showChart(data));
             }
 
             @Override
-            public void onFailure(Call<GoldResponse> call, Throwable t) {
-                tvStatus.setText("API lỗi → dùng USD fallback");
-                loadFromUSD();
+            public void onError(Exception e) {
+                requireActivity().runOnUiThread(() ->
+                        Toast.makeText(getContext(),
+                                "Lỗi load chart",
+                                Toast.LENGTH_SHORT).show());
             }
         });
     }
 
-    private void loadFromUSD() {
-        GoldApiService api = ApiClient.getService();
-
-        api.getRates(API_KEY, "USD", "VND").enqueue(new Callback<GoldResponse>() {
-            @Override
-            public void onResponse(Call<GoldResponse> call, Response<GoldResponse> response) {
-
-                if (response.body() == null || response.body().getRates() == null) {
-                    generateChart(70000000); // fallback cuối
-                    return;
-                }
-
-                Double rate = response.body().getRates().get("VND");
-
-                if (rate == null) {
-                    generateChart(70000000);
-                    return;
-                }
-
-                // 👉 giả lập giá vàng từ USD
-                double goldPrice = rate * 1900;
-
-                generateChart(goldPrice);
-            }
-
-            @Override
-            public void onFailure(Call<GoldResponse> call, Throwable t) {
-                generateChart(70000000);
-            }
-        });
-    }
-    private void generateChart(double basePrice) {
+    // =========================
+    // Render chart
+    // =========================
+    private void showChart(List<AbstractMap.SimpleEntry<String, Double>> data) {
 
         List<Entry> entries = new ArrayList<>();
-        Random random = new Random();
+        List<String> labels = new ArrayList<>();
 
-        lineChart.getDescription().setTextColor(Color.WHITE);
+        for (int i = 0; i < data.size(); i++) {
 
-        lineChart.getXAxis().setTextColor(Color.WHITE);
-        lineChart.getAxisLeft().setTextColor(Color.WHITE);
-        lineChart.getAxisRight().setTextColor(Color.WHITE);
+            AbstractMap.SimpleEntry<String, Double> item = data.get(i);
 
-        lineChart.getLegend().setTextColor(Color.WHITE);
+            labels.add(item.getKey());
 
-        for (int i = 0; i < 7; i++) {
-            float price = (float) (basePrice + random.nextInt(2000000) - 1000000);
-            entries.add(new Entry(i, price));
+            entries.add(new Entry(
+                    (float) i,
+                    item.getValue().floatValue()
+            ));
         }
 
-        Log.d("CHART", "entries size = " + entries.size());
+        LineDataSet dataSet = new LineDataSet(entries, "Giá 1 Ounce (VND)");
 
-        LineDataSet dataSet = new LineDataSet(entries, "Giá vàng 7 ngày");
-
-        dataSet.setColor(Color.YELLOW);
-        dataSet.setValueTextColor(Color.WHITE);
-        dataSet.setLineWidth(3f);
+        dataSet.setLineWidth(2f);
         dataSet.setCircleRadius(4f);
-        dataSet.setCircleColor(Color.YELLOW);
+        dataSet.setValueTextSize(10f);
 
         LineData lineData = new LineData(dataSet);
 
         lineChart.setData(lineData);
-        lineChart.getDescription().setText("Biểu đồ giá vàng");
+
+        // =========================
+        // X-axis label (dd/MM)
+        // =========================
+        XAxis xAxis = lineChart.getXAxis();
+        xAxis.setValueFormatter(new IndexAxisValueFormatter(labels));
+        xAxis.setGranularity(1f);
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+
+        lineChart.getDescription().setEnabled(false);
+        lineChart.animateX(1000);
         lineChart.invalidate();
     }
 }

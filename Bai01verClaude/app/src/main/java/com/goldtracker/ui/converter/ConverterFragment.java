@@ -1,13 +1,19 @@
 package com.goldtracker.ui.converter;
 
 import android.os.Bundle;
-import android.text.*;
-import android.view.*;
-import android.widget.*;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.TextView;
 
-import androidx.annotation.*;
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.goldtracker.Data.AppDatabase;
 import com.goldtracker.Data.History;
 import com.goldtracker.MainActivity;
 import com.goldtracker.R;
@@ -15,87 +21,163 @@ import com.goldtracker.model.GoldResponse;
 import com.goldtracker.repository.GoldRepository;
 
 import java.text.NumberFormat;
+import java.util.List;
 import java.util.Locale;
-
-import retrofit2.*;
 
 public class ConverterFragment extends Fragment {
 
-    private EditText edtGold;
+    private EditText edtAmount;
     private TextView tvResult;
     private Button btnConvert;
+    private Spinner spGoldType, spUnit;
 
-    private double currentPrice = 0;
     private GoldRepository repo;
+    private List<GoldResponse.GoldPrice> goldPrices;
 
-    @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
-                             @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
+                             ViewGroup container,
+                             Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_converter, container, false);
 
-        edtGold = view.findViewById(R.id.edtGold);
+        edtAmount = view.findViewById(R.id.edtGold);
         tvResult = view.findViewById(R.id.tvResult);
         btnConvert = view.findViewById(R.id.btnConvert);
+        spGoldType = view.findViewById(R.id.spGoldType);
+        spUnit = view.findViewById(R.id.spUnit);
 
-        repo = new GoldRepository();
+        repo = new GoldRepository(requireContext());
 
-        loadPrice();
+        setupSpinners();
+        loadPrices();
         setupConvertButton();
 
         return view;
     }
 
-    private void loadPrice() {
-        repo.getGoldPrice().enqueue(new Callback<GoldResponse>() {
+    // =========================
+    // Load bảng giá vàng
+    // =========================
+    private void loadPrices() {
+        repo.getCurrentGoldPrices(new GoldRepository.GoldCallback() {
             @Override
-            public void onResponse(Call<GoldResponse> call, Response<GoldResponse> response) {
-                if (response.body() != null && response.body().getRates() != null) {
-                    currentPrice = response.body().getRates().get("VND");
+            public void onSuccess(List<GoldResponse.GoldPrice> prices) {
+                goldPrices = prices;
+            }
+
+            @Override
+            public void onError(Exception e) {
+                tvResult.setText("Lỗi tải giá vàng");
+            }
+        });
+    }
+
+    // =========================
+    // Spinner data
+    // =========================
+    private void setupSpinners() {
+
+        if (getContext() == null) return;
+
+        String[] types = {"24K", "22K", "18K", "14K", "10K"};
+        String[] units = {"Gram", "Chỉ", "Lượng", "Ounce"};
+
+        spGoldType.setAdapter(new ArrayAdapter<>(
+                getContext(),
+                android.R.layout.simple_spinner_dropdown_item,
+                types
+        ));
+
+        spUnit.setAdapter(new ArrayAdapter<>(
+                getContext(),
+                android.R.layout.simple_spinner_dropdown_item,
+                units
+        ));
+    }
+
+    // Convert
+    private void setupConvertButton() {
+
+        btnConvert.setOnClickListener(v -> {
+
+            if (goldPrices == null || goldPrices.isEmpty()) {
+                tvResult.setText("Chưa có dữ liệu giá vàng");
+                return;
+            }
+
+            String inputStr = edtAmount.getText().toString().trim();
+
+            if (inputStr.isEmpty()) {
+                tvResult.setText("Nhập số lượng!");
+                return;
+            }
+
+            double amount = Double.parseDouble(inputStr);
+
+            String selectedType = spGoldType.getSelectedItem().toString();
+            GoldResponse.GoldPrice selected = null;
+
+            for (GoldResponse.GoldPrice p : goldPrices) {
+                if (p.type.contains(selectedType)) {
+                    selected = p;
+                    break;
                 }
             }
 
-            @Override
-            public void onFailure(Call<GoldResponse> call, Throwable t) {
-                tvResult.setText("Lỗi API");
-            }
-        });
-    }
-
-    private void setupConvertButton() {
-        btnConvert.setOnClickListener(v -> {
-
-            String input = edtGold.getText().toString().trim();
-
-            if (input.isEmpty()) {
-                tvResult.setText("Nhập số vàng!");
+            if (selected == null) {
+                tvResult.setText("Không tìm thấy loại vàng");
                 return;
             }
 
-            if (currentPrice == 0) {
-                tvResult.setText("Chưa có giá vàng!");
-                return;
+            double vndPerGram = selected.pricePerGramVnd;
+
+            // đổi đơn vị về gram
+            double gram;
+
+            switch (spUnit.getSelectedItemPosition()) {
+                case 0: // gram
+                    gram = amount;
+                    break;
+                case 1: // chỉ
+                    gram = amount * 3.75;
+                    break;
+                case 2: // lượng
+                    gram = amount * 37.5;
+                    break;
+                case 3: // ounce
+                    gram = amount * 31.1035;
+                    break;
+                default:
+                    gram = amount * 31.1035;
             }
 
-            double gold = Double.parseDouble(input);
-            double result = gold * currentPrice;
+            double result = gram * vndPerGram;
 
-            tvResult.setText(format(Math.round(result)) + " VND");
+            tvResult.setText(format(result) + " VND");
+
+            // lưu history
 
             History history = new History();
-            history.goldAmount = gold;
-            history.price = currentPrice;
+            history.goldType = selected.type;
+            history.goldPrice = vndPerGram;
+            history.unit = spUnit.getSelectedItem().toString();
+            history.quantity = amount;
             history.result = result;
-            history.time = new java.text.SimpleDateFormat("HH:mm dd/MM")
-                    .format(new java.util.Date());
+            history.time = System.currentTimeMillis();
 
-            MainActivity.db.historyDao().insert(history);
+            new Thread(() -> {
+                try {
+                    AppDatabase db = AppDatabase.getInstance(requireContext());
+                    db.historyDao().insert(history);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
         });
     }
 
-    private String format(long number) {
+    private String format(double number) {
         NumberFormat format = NumberFormat.getInstance(new Locale("vi", "VN"));
         return format.format(number);
     }

@@ -2,59 +2,75 @@ package com.goldtracker.ui.dashboard;
 
 import android.os.Bundle;
 import android.view.*;
-import android.widget.TextView;
+import android.widget.*;
+
 import androidx.annotation.*;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.*;
 
 import com.goldtracker.R;
 import com.goldtracker.model.GoldResponse;
 import com.goldtracker.repository.GoldRepository;
 
-import java.text.NumberFormat;
-import java.util.Locale;
-
-import retrofit2.*;
+import java.util.*;
 
 public class DashboardFragment extends Fragment {
 
-    private TextView tvPrice;
-    private GoldRepository repo;
+    private RecyclerView recyclerView;
+    private ProgressBar progressBar;
+    private GoldAdapter adapter;
+    private GoldRepository repository;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
-                             @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
-
-        View view = inflater.inflate(R.layout.fragment_dashboard, container, false);
-
-        tvPrice = view.findViewById(R.id.tvPrice);
-        repo = new GoldRepository();
-
-        loadPrice();
-
-        return view;
+                             ViewGroup container,
+                             Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_dashboard, container, false);
     }
 
-    private void loadPrice() {
-        repo.getGoldPrice().enqueue(new Callback<GoldResponse>() {
+    @Override
+    public void onViewCreated(@NonNull View view,
+                              Bundle savedInstanceState) {
+
+        recyclerView = view.findViewById(R.id.recyclerView);
+        progressBar = view.findViewById(R.id.progressBar);
+
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        adapter = new GoldAdapter(new ArrayList<>());
+        recyclerView.setAdapter(adapter);
+
+        repository = new GoldRepository(requireContext());
+
+        loadData();
+    }
+
+    private void loadData() {
+        progressBar.setVisibility(View.VISIBLE);
+
+        repository.getCurrentGoldPrices(new GoldRepository.GoldCallback() {
             @Override
-            public void onResponse(Call<GoldResponse> call, Response<GoldResponse> response) {
-                if (response.body() != null) {
-                    double price = response.body().getRates().get("VND");
-                    tvPrice.setText(format(Math.round(price)) + " VND/Ounce");
-                }
+            public void onSuccess(List<GoldResponse.GoldPrice> prices) {
+
+                if (!isAdded()) return;
+
+                requireActivity().runOnUiThread(() -> {
+                    progressBar.setVisibility(View.GONE);
+                    adapter.setData(prices);
+                });
             }
 
             @Override
-            public void onFailure(Call<GoldResponse> call, Throwable t) {
-                tvPrice.setText("Fail: " + t.getMessage());
+            public void onError(Exception e) {
+                if (!isAdded()) return;
+
+                requireActivity().runOnUiThread(() -> {
+                    progressBar.setVisibility(View.GONE);
+                    Toast.makeText(getContext(), e.toString(), Toast.LENGTH_LONG).show();
+                });
+
+                e.printStackTrace();
             }
         });
-    }
-
-    private String format(long number) {
-        NumberFormat format = NumberFormat.getInstance(new Locale("vi", "VN"));
-        return format.format(number);
     }
 }

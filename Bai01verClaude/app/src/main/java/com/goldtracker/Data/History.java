@@ -9,8 +9,21 @@ public class History {
     @PrimaryKey(autoGenerate = true)
     public int id;
 
-    public double goldAmount;   // số lượng vàng
-    public double price;        // giá vàng
-    public double result;       // tiền VND
-    public String time;         // thời gian
+    // Thời gian (timestamp)
+    public long time;
+
+    // Loại vàng (24K, 18K...)
+    public String goldType;
+
+    // Giá vàng (VND hoặc USD)
+    public double goldPrice;
+
+    // Đơn vị (gram, chỉ, lượng...)
+    public String unit;
+
+    // Số lượng
+    public double quantity;
+
+    // Kết quả (tổng tiền)
+    public double result;
 }

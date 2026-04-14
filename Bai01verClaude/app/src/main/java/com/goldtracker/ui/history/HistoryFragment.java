@@ -1,75 +1,74 @@
 package com.goldtracker.ui.history;
 
-import android.graphics.Color;
 import android.os.Bundle;
-import android.view.*;
-import android.widget.*;
-import androidx.fragment.app.Fragment;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.goldtracker.Data.AppDatabase;
 import com.goldtracker.Data.History;
 import com.goldtracker.MainActivity;
 import com.goldtracker.R;
 
-import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 public class HistoryFragment extends Fragment {
 
-    private ListView listView;
+    private RecyclerView rcHistory;
+    private HistoryAdapter adapter;
+    private List<History> list = new ArrayList<>();
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             ViewGroup container,
                              Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_history, container, false);
 
-        listView = view.findViewById(R.id.listView);
+        rcHistory = view.findViewById(R.id.rcHistory);
 
-        loadData();
+        rcHistory.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        adapter = new HistoryAdapter(list);
+        rcHistory.setAdapter(adapter);
+
+        loadHistory();
 
         return view;
     }
 
-    private void loadData() {
-        List<History> list = MainActivity.db.historyDao().getAll();
+    // =========================
+    // Load data từ Room
+    // =========================
+    private void loadHistory() {
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
-                getContext(),
-                android.R.layout.simple_list_item_1,
-                convertToString(list)
-        ) {
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
-                View view = super.getView(position, convertView, parent);
+        new Thread(() -> {
 
-                TextView text = view.findViewById(android.R.id.text1);
-                text.setTextColor(Color.WHITE);
+            try {
+                AppDatabase db = AppDatabase.getInstance(requireContext());
 
-                return view;
+                List<History> data = db.historyDao().getAll();
+
+                if (!isAdded()) return;
+
+                requireActivity().runOnUiThread(() -> {
+                    list.clear();
+                    if (data != null) {
+                        list.addAll(data);
+                    }
+                    adapter.notifyDataSetChanged();
+                });
+
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        };
 
-        listView.setAdapter(adapter);
-    }
-
-    private List<String> convertToString(List<History> list) {
-        List<String> data = new java.util.ArrayList<>();
-
-        for (History h : list) {
-            data.add(
-                    "Vàng: " + h.goldAmount + " lượng\n" +
-                            "GQD: " + format(Math.round(h.price)) + " VND\n" +
-                            "KQ: " + format(Math.round(h.result)) + " VND\n" +
-                            "Time: " + h.time
-            );
-        }
-
-        return data;
-    }
-
-    private String format(long number) {
-        NumberFormat format = NumberFormat.getInstance(new Locale("vi", "VN"));
-        return format.format(number);
+        }).start();
     }
 }
