@@ -56,17 +56,23 @@ public class ProfitFragment extends Fragment {
     // LOAD CURRENT GOLD PRICE
     // =========================
     private void loadPrice() {
-
+        // Thêm 2 tham số worldPrice và rate vào onSuccess
         repo.getCurrentGoldPrices(new GoldRepository.GoldCallback() {
             @Override
-            public void onSuccess(java.util.List<GoldResponse.GoldPrice> data) {
-
-                // lấy 24K làm base
+            public void onSuccess(java.util.List<GoldResponse.GoldPrice> data, double worldPrice, double rate) {
                 for (GoldResponse.GoldPrice item : data) {
                     if (item.type.contains("24K")) {
                         currentPricePerGram24k = item.pricePerGramVnd;
                         break;
                     }
+                }
+
+                if (isAdded()) {
+                    requireActivity().runOnUiThread(() -> {
+                        if (tvResult.getText().toString().contains("Đang tải")) {
+                            tvResult.setText("Giá vàng đã được cập nhật.");
+                        }
+                    });
                 }
             }
 
@@ -86,7 +92,7 @@ public class ProfitFragment extends Fragment {
         String[] goldTypes = {"24K", "22K", "18K", "14K", "10K"};
         ArrayAdapter<String> typeAdapter = new ArrayAdapter<>(
                 getContext(),
-                android.R.layout.simple_spinner_dropdown_item,
+                R.layout.item_spinner_selected,
                 goldTypes
         );
         spinnerType.setAdapter(typeAdapter);
@@ -95,7 +101,7 @@ public class ProfitFragment extends Fragment {
         String[] units = {"Gram", "Chỉ", "Lượng", "Ounce"};
         ArrayAdapter<String> unitAdapter = new ArrayAdapter<>(
                 getContext(),
-                android.R.layout.simple_spinner_dropdown_item,
+                R.layout.item_spinner_selected,
                 units
         );
         spinnerUnit.setAdapter(unitAdapter);

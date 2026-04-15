@@ -1,21 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:background="#FFFFFF"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="12dp">
+    android:orientation="vertical"
+    android:background="#0A0A0F">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <!-- ── HEADER ── -->
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Lịch sử chuyển đổi"
-        android:textStyle="bold"
-        android:textSize="18sp"
-        android:paddingBottom="8dp"/>
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="16dp">
 
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Lịch Sử"
+                android:textColor="#D4A843"
+                android:textSize="26sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Các lần tra cứu của bạn"
+                android:textColor="#9898A8"
+                android:textSize="13sp"
+                android:layout_marginTop="3dp" />
+        </LinearLayout>
+
+        <!-- Icon lịch sử -->
+        <TextView
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:text="⏱"
+            android:textColor="#9898A8"
+            android:textSize="36sp"
+            android:gravity="center"
+            android:background="#0A0A0F"/>
+
+    </LinearLayout>
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#1E1E2A" />
+
+    <!-- ── LIST ── -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rcHistory"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="16dp"
+        android:clipToPadding="false"
+        android:scrollbars="none" />
+
 </LinearLayout>

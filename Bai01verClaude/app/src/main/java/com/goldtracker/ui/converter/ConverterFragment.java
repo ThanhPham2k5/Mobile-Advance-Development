@@ -60,15 +60,29 @@ public class ConverterFragment extends Fragment {
     // Load bảng giá vàng
     // =========================
     private void loadPrices() {
+        // Nên hiện một ProgressBar ở đây để người dùng biết là đang load giá
         repo.getCurrentGoldPrices(new GoldRepository.GoldCallback() {
             @Override
-            public void onSuccess(List<GoldResponse.GoldPrice> prices) {
+            public void onSuccess(List<GoldResponse.GoldPrice> prices, double worldPrice, double rate) {
+                // Rất quan trọng: Phải gán giá trị này để setupConvertButton có dữ liệu dùng
                 goldPrices = prices;
+
+                // Nếu bạn muốn hiện thông báo "Đã cập nhật giá mới nhất"
+                if (isAdded()) {
+                    requireActivity().runOnUiThread(() -> {
+                        // Có thể thông báo cho người dùng hoặc cho phép bấm nút convert
+                        btnConvert.setEnabled(true);
+                    });
+                }
             }
 
             @Override
             public void onError(Exception e) {
-                tvResult.setText("Lỗi tải giá vàng");
+                if (isAdded()) {
+                    requireActivity().runOnUiThread(() -> {
+                        tvResult.setText("Lỗi: Không thể lấy giá vàng.");
+                    });
+                }
             }
         });
     }
@@ -85,13 +99,13 @@ public class ConverterFragment extends Fragment {
 
         spGoldType.setAdapter(new ArrayAdapter<>(
                 getContext(),
-                android.R.layout.simple_spinner_dropdown_item,
+                R.layout.item_spinner_selected,
                 types
         ));
 
         spUnit.setAdapter(new ArrayAdapter<>(
                 getContext(),
-                android.R.layout.simple_spinner_dropdown_item,
+                R.layout.item_spinner_selected,
                 units
         ));
     }

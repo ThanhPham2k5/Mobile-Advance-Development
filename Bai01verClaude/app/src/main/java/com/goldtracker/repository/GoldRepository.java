@@ -28,7 +28,7 @@ public class GoldRepository {
 
     // Lấy giá vàng hiện tại
     public interface GoldCallback {
-        void onSuccess(List<GoldResponse.GoldPrice> prices);
+        void onSuccess(List<GoldResponse.GoldPrice> prices, double worldPrice, double rate);
         void onError(Exception e);
     }
 
@@ -41,7 +41,7 @@ public class GoldRepository {
                         api.getLatestPrice(
                                 ApiClient.API_KEY,
                                 "XAU",
-                                "VND"
+                                "USD,VND"
                         ).execute();
 
                 if (!metalResp.isSuccessful() || metalResp.body() == null) {
@@ -54,7 +54,14 @@ public class GoldRepository {
                     throw new Exception("Missing VND rate");
                 }
 
+                // 1. Lấy giá vàng bằng USD (Đây chính là giá thế giới)
+                double xauUsdPerOunce = rates.get("USD");
+
+                // 2. Lấy giá vàng bằng VND
                 double xauVndPerOunce = rates.get("VND");
+
+                // 3. Tính tỷ giá USD/VND (Lấy giá Vàng/VND chia cho giá Vàng/USD)
+                double exchangeRate = xauVndPerOunce / xauUsdPerOunce;
 
                 // =========================
                 // CONSTANTS
@@ -89,7 +96,7 @@ public class GoldRepository {
                     ));
                 }
 
-                callback.onSuccess(prices);
+                callback.onSuccess(prices, xauUsdPerOunce, exchangeRate);
 
             } catch (Exception e) {
                 callback.onError(e);

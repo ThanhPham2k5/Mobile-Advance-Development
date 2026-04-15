@@ -1,52 +1,207 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:padding="16dp"
-    android:background="#FFFFFF"
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#0A0A0F"
+    android:fillViewport="true">
 
-    <!-- Nhập số lượng -->
-    <EditText
-        android:id="@+id/edtGold"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Nhập số lượng"
-        android:inputType="numberDecimal"/>
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="40dp">
 
-    <!-- Spinner loại vàng -->
-    <Spinner
-        android:id="@+id/spGoldType"
-        android:layout_width="match_parent"
-        android:layout_height="39dp"
-        android:backgroundTint="@color/bg_primary"
-        android:popupBackground="#222222"
-        android:layout_marginTop="10dp" />
+        <!-- ── PAGE TITLE ── -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Quy Đổi Vàng"
+            android:textColor="#D4A843"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.02" />
 
-    <!-- Spinner đơn vị -->
-    <Spinner
-        android:id="@+id/spUnit"
-        android:layout_width="match_parent"
-        android:layout_height="39dp"
-        android:backgroundTint="@color/bg_primary"
-        android:popupBackground="#222222"
-        android:layout_marginTop="10dp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tính nhanh giá trị vàng sang VND"
+            android:textColor="#9898A8"
+            android:textSize="13sp"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="28dp" />
 
-    <!-- Button convert -->
-    <Button
-        android:id="@+id/btnConvert"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Chuyển đổi"
-        android:layout_marginTop="12dp"/>
+        <!-- ── INPUT CARD ── -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="#1C1C26"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            android:layout_marginBottom="14dp">
 
-    <!-- Result -->
-    <TextView
-        android:id="@+id/tvResult"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:paddingTop="12dp"
-        android:text="Kết quả"
-        android:textSize="18sp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="20dp"
+                android:paddingBottom="20dp">
 
-</LinearLayout>
+                <!-- Label -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="SỐ LƯỢNG"
+                    android:textColor="#9898A8"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.1"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- EditText nhập số lượng -->
+                <EditText
+                    android:id="@+id/edtGold"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:hint="0.00"
+                    android:inputType="numberDecimal"
+                    android:textColor="#F5F5F0"
+                    android:textColorHint="#3A3A4A"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:background="#13131A"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp" />
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- ── SELECTOR CARD ── -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="#1C1C26"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            android:layout_marginBottom="14dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="20dp"
+                android:paddingBottom="20dp">
+
+                <!-- Loại vàng -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="LOẠI VÀNG"
+                    android:textColor="#9898A8"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.1"
+                    android:layout_marginBottom="8dp" />
+
+                <Spinner
+                    android:id="@+id/spGoldType"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:background="@drawable/bg_spinner"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:popupBackground="#1C1C26"
+                    android:layout_marginBottom="16dp" />
+
+                <!-- Divider -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#252535"
+                    android:layout_marginBottom="16dp" />
+
+                <!-- Đơn vị -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ĐƠN VỊ"
+                    android:textColor="#9898A8"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.1"
+                    android:layout_marginBottom="8dp" />
+
+                <Spinner
+                    android:id="@+id/spUnit"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:background="@drawable/bg_spinner"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:popupBackground="#1C1C26" />
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- ── BUTTON ── -->
+        <Button
+            android:id="@+id/btnConvert"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="CHUYỂN ĐỔI"
+            android:textColor="#0A0A0F"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.1"
+            android:backgroundTint="#D4A843"
+            android:layout_marginBottom="20dp" />
+
+        <!-- ── RESULT CARD ── -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="#141208"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="28dp"
+                android:paddingBottom="28dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="KẾT QUẢ QUY ĐỔI"
+                    android:textColor="#9A7520"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.12"
+                    android:layout_marginBottom="10dp" />
+
+                <TextView
+                    android:id="@+id/tvResult"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="0 VND"
+                    android:textColor="#D4A843"
+                    android:textSize="32sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:lineSpacingExtra="4dp" />
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+    </LinearLayout>
+</ScrollView>
