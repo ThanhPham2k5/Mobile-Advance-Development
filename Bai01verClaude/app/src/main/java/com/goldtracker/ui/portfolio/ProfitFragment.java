@@ -11,10 +11,12 @@ import com.goldtracker.R;
 import com.goldtracker.model.GoldResponse;
 import com.goldtracker.repository.GoldRepository;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.NumberFormat;
+import java.util.HashMap;
 import java.util.Locale;
-
-import retrofit2.*;
+import java.util.Map;
 
 public class ProfitFragment extends Fragment {
 
@@ -25,7 +27,7 @@ public class ProfitFragment extends Fragment {
 
     private GoldRepository repo;
 
-    private double currentPricePerGram24k = 0;
+    private Map<String, GoldResponse.GoldPrice> priceMap = new HashMap<>();
 
     @Nullable
     @Override
@@ -52,19 +54,22 @@ public class ProfitFragment extends Fragment {
         return view;
     }
 
-    // =========================
-    // LOAD CURRENT GOLD PRICE
-    // =========================
     private void loadPrice() {
         // Thêm 2 tham số worldPrice và rate vào onSuccess
         repo.getCurrentGoldPrices(new GoldRepository.GoldCallback() {
             @Override
             public void onSuccess(java.util.List<GoldResponse.GoldPrice> data, double worldPrice, double rate) {
                 for (GoldResponse.GoldPrice item : data) {
-                    if (item.type.contains("24K")) {
-                        currentPricePerGram24k = item.pricePerGramVnd;
-                        break;
-                    }
+
+                    String key = item.type;
+
+                    if (key.contains("24K")) key = "24K";
+                    else if (key.contains("22K")) key = "22K";
+                    else if (key.contains("18K")) key = "18K";
+                    else if (key.contains("14K")) key = "14K";
+                    else if (key.contains("10K")) key = "10K";
+
+                    priceMap.put(key, item);
                 }
 
                 if (isAdded()) {
@@ -83,12 +88,8 @@ public class ProfitFragment extends Fragment {
         });
     }
 
-    // =========================
-    // SPINNER DATA
-    // =========================
     private void setupSpinners() {
 
-        // Gold types
         String[] goldTypes = {"24K", "22K", "18K", "14K", "10K"};
         ArrayAdapter<String> typeAdapter = new ArrayAdapter<>(
                 getContext(),
@@ -97,7 +98,6 @@ public class ProfitFragment extends Fragment {
         );
         spinnerType.setAdapter(typeAdapter);
 
-        // Units
         String[] units = {"Gram", "Chỉ", "Lượng", "Ounce"};
         ArrayAdapter<String> unitAdapter = new ArrayAdapter<>(
                 getContext(),
@@ -107,7 +107,6 @@ public class ProfitFragment extends Fragment {
         spinnerUnit.setAdapter(unitAdapter);
     }
 
-    // CALCULATE PROFIT / LOSS
     private void setupButton() {
 
         btnCalc.setOnClickListener(v -> {
@@ -128,39 +127,56 @@ public class ProfitFragment extends Fragment {
                 String goldType = spinnerType.getSelectedItem().toString();
                 String unit = spinnerUnit.getSelectedItem().toString();
 
-                double purity = getPurity(goldType);
-                double gram = convertToGram(quantity, unit);
+                GoldResponse.GoldPrice price = priceMap.get(goldType);
 
-                double currentPricePerGram = currentPricePerGram24k * purity;
+                if (price == null) {
+                    tvResult.setText("Không có dữ liệu giá");
+                    return;
+                }
 
-                // =========================
-                // DÙNG BIGDECIMAL CHO CHÍNH XÁC
-                // =========================
-                java.math.BigDecimal currentTotal =
-                        java.math.BigDecimal.valueOf(currentPricePerGram)
-                                .multiply(java.math.BigDecimal.valueOf(gram));
+                BigDecimal unitPrice;
 
-                java.math.BigDecimal buyTotal =
-                        java.math.BigDecimal.valueOf(buyPrice)
-                                .multiply(java.math.BigDecimal.valueOf(gram));
+                switch (unit) {
+                    case "Gram":
+                        unitPrice = BigDecimal.valueOf(price.pricePerGramVnd);
+                        break;
 
-                java.math.BigDecimal profit = currentTotal.subtract(buyTotal);
+                    case "Chỉ":
+                        unitPrice = BigDecimal.valueOf(price.pricePerChiVnd);
+                        break;
 
-                // làm tròn 2 số thập phân VND (an toàn)
-                profit = profit.setScale(0, java.math.RoundingMode.HALF_UP);
+                    case "Lượng":
+                        unitPrice = BigDecimal.valueOf(price.pricePerLuongVnd);
+                        break;
 
-                if (profit.compareTo(java.math.BigDecimal.ZERO) > 0) {
+                    case "Ounce":
+                        unitPrice = BigDecimal.valueOf(price.pricePerOunceVnd);
+                        break;
 
-                    tvResult.setText("Lãi: " + format(profit.longValue()) + " VND");
+                    default:
+                        unitPrice = BigDecimal.valueOf(price.pricePerGramVnd);
+                }
+
+                BigDecimal qtyBD = BigDecimal.valueOf(quantity);
+
+                BigDecimal marketTotal = unitPrice.multiply(qtyBD);
+
+                BigDecimal buyTotal = BigDecimal.valueOf(buyPrice);
+
+                BigDecimal profit = marketTotal.subtract(buyTotal)
+                        .setScale(0, RoundingMode.HALF_UP);
+
+                int cmp = profit.compareTo(BigDecimal.ZERO);
+
+                if (cmp > 0) {
+                    tvResult.setText("Lãi: " + format(profit) + " VND");
                     tvResult.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
 
-                } else if (profit.compareTo(java.math.BigDecimal.ZERO) < 0) {
-
-                    tvResult.setText("Lỗ: " + format(profit.abs().longValue()) + " VND");
+                } else if (cmp < 0) {
+                    tvResult.setText("Lỗ: " + format(profit.abs()) + " VND");
                     tvResult.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
 
                 } else {
-
                     tvResult.setText("Hòa vốn");
                     tvResult.setTextColor(getResources().getColor(android.R.color.darker_gray));
                 }
@@ -171,38 +187,11 @@ public class ProfitFragment extends Fragment {
         });
     }
 
-    // PURITY MAP
-    private double getPurity(String type) {
-
-        switch (type) {
-            case "24K": return 1.0;
-            case "22K": return 22.0 / 24.0;
-            case "18K": return 18.0 / 24.0;
-            case "14K": return 14.0 / 24.0;
-            case "10K": return 10.0 / 24.0;
-            default: return 1.0;
-        }
-    }
-
-    // UNIT CONVERT
-    private double convertToGram(double value, String unit) {
-
-        switch (unit) {
-            case "Chỉ":
-                return value * 3.75;
-            case "Lượng":
-                return value * 37.5;
-            case "Ounce":
-                return value * 31.1035;
-            default:
-                return value;
-        }
-    }
-
+    // =========================
     // FORMAT MONEY
-    private String format(double number) {
-
+    // =========================
+    private String format(BigDecimal number) {
         NumberFormat format = NumberFormat.getInstance(new Locale("vi", "VN"));
-        return format.format(Math.round(number));
+        return format.format(number);
     }
 }
