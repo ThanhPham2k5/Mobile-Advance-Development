@@ -12,7 +12,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiClient {
 
-    public static final String API_KEY = "97f52f8f8c89c9a0a8b347c9480d7ed2";
+    public static final String API_KEY = "6510d6a4481b2320a6c07435287a1431";
 
     private static final String BASE_URL = "https://api.metalpriceapi.com/";
 
